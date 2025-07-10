@@ -415,6 +415,20 @@
                 >
                   <i class="fas fa-forward mr-2"></i> Next Step
                 </button>
+                <button
+                  id="auto-next-btn"
+                  class="btn btn-primary flex-grow md:flex-none"
+                  style="margin-left: 0.5rem;"
+                >
+                  <i class="fas fa-play mr-2"></i> Auto Next
+                </button>
+                <button
+                  id="final-step-btn"
+                  class="btn btn-secondary flex-grow md:flex-none"
+                  style="margin-left: 0.5rem;"
+                >
+                  <i class="fas fa-step-forward mr-2"></i> Final Step
+                </button>
               </div>
             </div>
           </div>
@@ -1125,6 +1139,8 @@ Rules will appear here</pre
       const enfaConvertBtn = document.getElementById("enfa-convert-btn");
       const enfaGraph = document.getElementById("enfa-graph");
       const enfaDfaGraph = document.getElementById("enfa-dfa-graph");
+      const autoNextBtn = document.getElementById("auto-next-btn");
+      const finalStepBtn = document.getElementById("final-step-btn");
 
       // ===== UTILITY FUNCTIONS =====
       function setToString(set) {
@@ -1959,6 +1975,48 @@ Rules will appear here</pre
       // ===== INITIALIZATION =====
       window.addEventListener("load", () => {
         switchTab("nfa-dfa");
+      });
+
+      // ===== AUTO NEXT & FINAL STEP LOGIC =====
+      let autoNextInterval = null;
+      function autoNextStep() {
+        if (currentStepIndex < simulationSteps.length - 1) {
+          nextStep();
+          if (currentStepIndex < simulationSteps.length - 1) {
+            autoNextInterval = setTimeout(autoNextStep, 3000);
+          } else {
+            autoNextBtn.disabled = false;
+            autoNextBtn.classList.remove("btn-disabled");
+          }
+        }
+      }
+      autoNextBtn.addEventListener("click", () => {
+        autoNextBtn.disabled = true;
+        autoNextBtn.classList.add("btn-disabled");
+        autoNextStep();
+      });
+      function goToFinalStep() {
+        while (currentStepIndex < simulationSteps.length - 1) {
+          nextStep();
+        }
+      }
+      finalStepBtn.addEventListener("click", goToFinalStep);
+      // Stop auto next if user clicks nextStepBtn or reset
+      nextStepBtn.addEventListener("click", () => {
+        if (autoNextInterval) {
+          clearTimeout(autoNextInterval);
+          autoNextInterval = null;
+          autoNextBtn.disabled = false;
+          autoNextBtn.classList.remove("btn-disabled");
+        }
+      });
+      resetBtn.addEventListener("click", () => {
+        if (autoNextInterval) {
+          clearTimeout(autoNextInterval);
+          autoNextInterval = null;
+          autoNextBtn.disabled = false;
+          autoNextBtn.classList.remove("btn-disabled");
+        }
       });
     </script>
   </body>
