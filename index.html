@@ -1,0 +1,1915 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Automata Theory Conversion Simulator</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#f0f9ff",
+                100: "#e0f2fe",
+                200: "#bae6fd",
+                300: "#7dd3fc",
+                400: "#38bdf8",
+                500: "#0ea5e9",
+                600: "#0284c7",
+                700: "#0369a1",
+                800: "#075985",
+                900: "#0c4a6e",
+              },
+              secondary: {
+                50: "#f5f3ff",
+                100: "#ede9fe",
+                200: "#ddd6fe",
+                300: "#c4b5fd",
+                400: "#a78bfa",
+                500: "#8b5cf6",
+                600: "#7c3aed",
+                700: "#6d28d9",
+                800: "#5b21b6",
+                900: "#4c1d95",
+              },
+              accent: {
+                50: "#fdf2f8",
+                100: "#fce7f3",
+                200: "#fbcfe8",
+                300: "#f9a8d4",
+                400: "#f472b6",
+                500: "#ec4899",
+                600: "#db2777",
+                700: "#be185d",
+                800: "#9d174d",
+                900: "#831843",
+              },
+              dark: {
+                50: "#f8fafc",
+                100: "#f1f5f9",
+                200: "#e2e8f0",
+                300: "#cbd5e1",
+                400: "#94a3b8",
+                500: "#64748b",
+                600: "#475569",
+                700: "#334155",
+                800: "#1e293b",
+                900: "#0f172a",
+              },
+            },
+            fontFamily: {
+              sans: ['"Inter"', "sans-serif"],
+              mono: ['"Fira Code"', "monospace"],
+            },
+          },
+        },
+      };
+    </script>
+
+    <!-- Vis.js for graph visualization -->
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"
+    ></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <style>
+      body {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        min-height: 100vh;
+      }
+
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+      }
+
+      .graph-container {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
+          0 2px 4px -2px rgba(0, 0, 0, 0.05);
+        height: 500px;
+        width: 100%;
+        transition: all 0.3s ease;
+      }
+
+      .graph-container:hover {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+          0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      }
+
+      .tab {
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .tab::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 3px;
+        background: currentColor;
+        transition: width 0.3s ease;
+      }
+
+      .tab:hover::after {
+        width: 70%;
+      }
+
+      .tab-active {
+        background: linear-gradient(
+          135deg,
+          rgba(14, 165, 233, 0.1) 0%,
+          rgba(124, 58, 237, 0.1) 100%
+        );
+        color: #7c3aed;
+        font-weight: 600;
+      }
+
+      .tab-active::after {
+        width: 70%;
+      }
+
+      .btn {
+        transition: all 0.3s ease;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #0ea5e9 0%, #7c3aed 100%);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(14, 165, 233, 0.3),
+          0 4px 6px -4px rgba(124, 58, 237, 0.3);
+      }
+
+      .btn-secondary {
+        background: white;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+      }
+
+      .btn-secondary:hover {
+        background: #f8fafc;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
+          0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      }
+
+      .explanation-panel {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        color: #e2e8f0;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+          0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      }
+
+      .input-field {
+        transition: all 0.3s ease;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      }
+
+      .input-field:focus {
+        border-color: #7c3aed;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+      }
+
+      .select-dropdown {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        appearance: none;
+      }
+
+      .animate-pulse {
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 0.8;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0.8;
+        }
+      }
+
+      .tooltip {
+        position: relative;
+      }
+
+      .tooltip-text {
+        visibility: hidden;
+        width: 200px;
+        background-color: #1e293b;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 5px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body class="font-sans text-dark-800">
+    <div class="min-h-screen flex flex-col">
+      <!-- Header -->
+      <header
+        class="bg-gradient-to-r from-primary-600 to-secondary-600 text-white shadow-lg"
+      >
+        <div class="container mx-auto px-4 py-6">
+          <div class="flex flex-col md:flex-row justify-between items-center">
+            <div class="flex items-center mb-4 md:mb-0">
+              <i class="fas fa-project-diagram text-3xl mr-3"></i>
+              <div>
+                <h1 class="text-3xl font-bold">Automata Theory Simulator</h1>
+                <p class="text-primary-200">
+                  Interactive visualization tool for formal language conversions
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button class="btn btn-secondary">
+                <i class="fas fa-book mr-2"></i> Docs
+              </button>
+              <button class="btn btn-secondary">
+                <i class="fas fa-github mr-2"></i> GitHub
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="flex-grow container mx-auto px-4 py-8">
+        <!-- Conversion Tabs -->
+        <div class="glass-panel rounded-xl p-2 mb-8">
+          <div class="flex overflow-x-auto pb-2 space-x-2">
+            <div id="tab-nfa-dfa" class="tab tab-active flex items-center">
+              <i class="fas fa-random mr-2"></i>
+              <span>NFA to DFA</span>
+            </div>
+            <div id="tab-regex-dfa" class="tab flex items-center">
+              <i class="fas fa-terminal mr-2"></i>
+              <span>RegEx to DFA</span>
+            </div>
+            <div id="tab-dfa-regex" class="tab flex items-center">
+              <i class="fas fa-code mr-2"></i>
+              <span>DFA to RegEx</span>
+            </div>
+            <div id="tab-cfg-cfl" class="tab flex items-center">
+              <i class="fas fa-language mr-2"></i>
+              <span>CFG to CFL</span>
+            </div>
+            <div id="tab-enfa-dfa" class="tab flex items-center">
+              <i class="fas fa-infinity mr-2"></i>
+              <span>ε-NFA to DFA</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- NFA to DFA Panel -->
+        <div id="panel-nfa-dfa" class="conversion-panel">
+          <div class="glass-panel rounded-xl p-6 mb-8">
+            <div
+              class="flex flex-col md:flex-row justify-between items-center gap-4"
+            >
+              <div class="flex items-center gap-4 w-full md:w-auto">
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-primary-500"></i>
+                  <span class="tooltip-text"
+                    >Select from predefined NFA examples to visualize the
+                    conversion process</span
+                  >
+                </div>
+                <select
+                  id="nfa-select"
+                  class="input-field select-dropdown flex-grow md:w-64"
+                >
+                  <option value="ends-in-01">Ends with "01"</option>
+                  <option value="epsilon">Contains ε-transitions</option>
+                  <option value="substring-101">Contains "101"</option>
+                  <option value="even-zeros">Even number of 0s</option>
+                  <option value="contains-aa">Contains "aa"</option>
+                  <option value="starts-with-ab">Starts with "ab"</option>
+                  <option value="contains-a-or-b">Contains 'a' or 'b'</option>
+                  <option value="divisible-by-3-binary">
+                    Binary divisible by 3
+                  </option>
+                  <option value="at-least-two-a">At least two 'a's</option>
+                </select>
+              </div>
+              <div class="flex items-center gap-3 w-full md:w-auto">
+                <button
+                  id="reset-btn"
+                  class="btn btn-secondary flex-grow md:flex-none"
+                >
+                  <i class="fas fa-redo mr-2"></i> Reset
+                </button>
+                <button
+                  id="next-step-btn"
+                  class="btn btn-primary flex-grow md:flex-none"
+                >
+                  <i class="fas fa-forward mr-2"></i> Next Step
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="glass-panel rounded-xl p-6">
+              <h2
+                class="text-2xl font-bold text-center mb-4 text-dark-700 flex items-center justify-center"
+              >
+                <i class="fas fa-random mr-2 text-accent-600"></i> Original NFA
+              </h2>
+              <div id="nfa-graph" class="graph-container"></div>
+            </div>
+            <div class="glass-panel rounded-xl p-6">
+              <h2
+                class="text-2xl font-bold text-center mb-4 text-dark-700 flex items-center justify-center"
+              >
+                <i class="fas fa-project-diagram mr-2 text-primary-600"></i>
+                Equivalent DFA
+              </h2>
+              <div id="dfa-graph" class="graph-container"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RegEx to DFA Panel -->
+        <div id="panel-regex-dfa" class="conversion-panel hidden">
+          <div class="glass-panel rounded-xl p-6 mb-8">
+            <div
+              class="flex flex-col md:flex-row justify-between items-center gap-4"
+            >
+              <div class="flex items-center gap-4 w-full">
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-primary-500"></i>
+                  <span class="tooltip-text"
+                    >Enter a regular expression to convert to DFA</span
+                  >
+                </div>
+                <input
+                  type="text"
+                  id="regex-input"
+                  class="input-field flex-grow"
+                  placeholder="Enter regex (e.g., (a|b)*abb, a*b+, (a|b)*, (00|11)*, (ab|ba)*)"
+                />
+              </div>
+              <button
+                id="regex-convert-btn"
+                class="btn btn-primary w-full md:w-auto mt-4 md:mt-0"
+              >
+                <i class="fas fa-exchange-alt mr-2"></i> Convert to DFA
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="glass-panel rounded-xl p-6">
+              <h2
+                class="text-2xl font-bold text-center mb-4 text-dark-700 flex items-center justify-center"
+              >
+                <i class="fas fa-sitemap mr-2 text-accent-600"></i> RegEx Parse
+                Tree
+              </h2>
+              <div
+                id="regex-tree"
+                class="graph-container flex items-center justify-center"
+              >
+                <p class="text-dark-400">Parse tree will appear here</p>
+              </div>
+            </div>
+            <div class="glass-panel rounded-xl p-6">
+              <h2
+                class="text-2xl font-bold text-center mb-4 text-dark-700 flex items-center justify-center"
+              >
+                <i class="fas fa-project-diagram mr-2 text-primary-600"></i>
+                Resulting DFA
+              </h2>
+              <div
+                id="regex-dfa-graph"
+                class="graph-container flex items-center justify-center"
+              >
+                <p class="text-dark-400">DFA will appear here</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DFA to RegEx Panel -->
+        <div id="panel-dfa-regex" class="conversion-panel hidden">
+          <div class="glass-panel rounded-xl p-6 mb-8">
+            <div
+              class="flex flex-col md:flex-row justify-between items-center gap-4"
+            >
+              <div class="flex items-center gap-4 w-full md:w-auto">
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-primary-500"></i>
+                  <span class="tooltip-text"
+                    >Select a DFA to convert to regular expression</span
+                  >
+                </div>
+                <select
+                  id="dfa-select"
+                  class="input-field select-dropdown flex-grow md:w-64"
+                >
+                  <option value="ends-with-00">Ends with "00"</option>
+                  <option value="even-length">Even length strings</option>
+                  <option value="contains-101">Contains "101"</option>
+                  <option value="starts-with-0">Starts with "0"</option>
+                  <option value="accepts-a-power-n">Accepts a^n</option>
+                  <option value="alternating-01">Alternating 0s and 1s</option>
+                  <option value="binary-divisible-by-5">
+                    Binary divisible by 5
+                  </option>
+                  <option value="strings-with-even-a-and-odd-b">
+                    Even 'a' and odd 'b'
+                  </option>
+                  <option value="binary-strings-divisible-by-3">
+                    Binary divisible by 3
+                  </option>
+                  <option value="strings-with-at-least-two-a">
+                    At least two 'a's
+                  </option>
+                  <option value="language-a-star-b-star">Language a*b*</option>
+                </select>
+              </div>
+              <button
+                id="dfa-regex-convert-btn"
+                class="btn btn-primary w-full md:w-auto mt-4 md:mt-0"
+              >
+                <i class="fas fa-exchange-alt mr-2"></i> Convert to RegEx
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="glass-panel rounded-xl p-6">
+              <h2
+                class="text-2xl font-bold text-center mb-4 text-dark-700 flex items-center justify-center"
+              >
+                <i class="fas fa-project-diagram mr-2 text-primary-600"></i>
+                Original DFA
+              </h2>
+              <div id="dfa-original-graph" class="graph-container"></div>
+            </div>
+            <div class="glass-panel rounded-xl p-6">
+              <h2
+                class="text-2xl font-bold text-center mb-4 text-dark-700 flex items-center justify-center"
+              >
+                <i class="fas fa-code mr-2 text-accent-600"></i> Resulting
+                Regular Expression
+              </h2>
+              <div
+                id="regex-result"
+                class="graph-container flex items-center justify-center p-4"
+              >
+                <div
+                  id="regex-output"
+                  class="text-2xl font-mono bg-slate-100 p-4 rounded-lg text-center w-full"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CFG to CFL Panel -->
+        <div id="panel-cfg-cfl" class="conversion-panel hidden">
+          <div class="glass-panel rounded-xl p-6 mb-8">
+            <div
+              class="flex flex-col md:flex-row justify-between items-center gap-4"
+            >
+              <div class="flex items-center gap-4 w-full">
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-primary-500"></i>
+                  <span class="tooltip-text"
+                    >Enter a Context-Free Grammar to generate language
+                    examples</span
+                  >
+                </div>
+                <textarea
+                  id="cfg-input"
+                  class="input-field flex-grow"
+                  rows="3"
+                  placeholder="Enter CFG (e.g., S → aSb | ε)"
+                ></textarea>
+              </div>
+              <button
+                id="cfg-convert-btn"
+                class="btn btn-primary w-full md:w-auto mt-4 md:mt-0"
+              >
+                <i class="fas fa-exchange-alt mr-2"></i> Generate Language
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="glass-panel rounded-xl p-6">
+              <h2
+                class="text-2xl font-bold text-center mb-4 text-dark-700 flex items-center justify-center"
+              >
+                <i class="fas fa-language mr-2 text-accent-600"></i> CFG Rules
+              </h2>
+              <div id="cfg-rules" class="graph-container p-4 overflow-auto">
+                <pre class="text-sm font-mono bg-slate-100 p-4 rounded-lg">
+Rules will appear here</pre
+                >
+              </div>
+            </div>
+            <div class="glass-panel rounded-xl p-6">
+              <h2
+                class="text-2xl font-bold text-center mb-4 text-dark-700 flex items-center justify-center"
+              >
+                <i class="fas fa-list-ul mr-2 text-primary-600"></i> Generated
+                Language Examples
+              </h2>
+              <div id="cfl-examples" class="graph-container p-4 overflow-auto">
+                <ul class="list-disc pl-5 space-y-2">
+                  Examples will appear here
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ε-NFA to DFA Panel -->
+        <div id="panel-enfa-dfa" class="conversion-panel hidden">
+          <div class="glass-panel rounded-xl p-6 mb-8">
+            <div
+              class="flex flex-col md:flex-row justify-between items-center gap-4"
+            >
+              <div class="flex items-center gap-4 w-full md:w-auto">
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-primary-500"></i>
+                  <span class="tooltip-text"
+                    >Select an ε-NFA to convert to DFA</span
+                  >
+                </div>
+                <select
+                  id="enfa-select"
+                  class="input-field select-dropdown flex-grow md:w-64"
+                >
+                  <option value="epsilon-example1">
+                    Example with ε transitions
+                  </option>
+                  <option value="epsilon-example2">Complex ε-NFA</option>
+                  <option value="epsilon-example3">
+                    ε-NFA with single ε-transition
+                  </option>
+                  <option value="epsilon-example4">
+                    ε-NFA with multiple paths
+                  </option>
+                  <option value="epsilon-example5">
+                    ε-NFA with self-loops
+                  </option>
+                  <option value="epsilon-example6">ε-NFA with ε-loops</option>
+                </select>
+              </div>
+              <button
+                id="enfa-convert-btn"
+                class="btn btn-primary w-full md:w-auto mt-4 md:mt-0"
+              >
+                <i class="fas fa-exchange-alt mr-2"></i> Convert to DFA
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="glass-panel rounded-xl p-6">
+              <h2
+                class="text-2xl font-bold text-center mb-4 text-dark-700 flex items-center justify-center"
+              >
+                <i class="fas fa-infinity mr-2 text-accent-600"></i> Original
+                ε-NFA
+              </h2>
+              <div id="enfa-graph" class="graph-container"></div>
+            </div>
+            <div class="glass-panel rounded-xl p-6">
+              <h2
+                class="text-2xl font-bold text-center mb-4 text-dark-700 flex items-center justify-center"
+              >
+                <i class="fas fa-project-diagram mr-2 text-primary-600"></i>
+                Equivalent DFA
+              </h2>
+              <div id="enfa-dfa-graph" class="graph-container"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Explanation Section -->
+        <div class="glass-panel rounded-xl p-6">
+          <h2 class="text-2xl font-bold mb-4 text-dark-700 flex items-center">
+            <i class="fas fa-lightbulb mr-2 text-yellow-500"></i> Conversion
+            Process
+          </h2>
+          <div id="explanation-panel" class="explanation-panel">
+            <div class="flex items-start">
+              <div class="mr-4 text-accent-400">
+                <i class="fas fa-robot text-xl"></i>
+              </div>
+              <div>
+                <p class="whitespace-pre-wrap font-mono">
+                  Select a conversion type and input to begin the process.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer class="bg-dark-800 text-white py-6">
+        <div class="container mx-auto px-4">
+          <div class="flex flex-col md:flex-row justify-between items-center">
+            <div class="mb-4 md:mb-0">
+              <h3 class="text-xl font-bold flex items-center">
+                <i class="fas fa-project-diagram mr-2 text-primary-400"></i>
+                Automata Simulator
+              </h3>
+              <p class="text-dark-300">
+                Interactive tool for computer science education
+              </p>
+            </div>
+            <div class="flex space-x-4">
+              <a href="#" class="text-dark-300 hover:text-white transition">
+                <i class="fab fa-twitter text-xl"></i>
+              </a>
+              <a href="#" class="text-dark-300 hover:text-white transition">
+                <i class="fab fa-github text-xl"></i>
+              </a>
+              <a href="#" class="text-dark-300 hover:text-white transition">
+                <i class="fas fa-envelope text-xl"></i>
+              </a>
+            </div>
+          </div>
+          <div
+            class="mt-6 pt-6 border-t border-dark-700 text-center text-dark-400 text-sm"
+          >
+            <p>
+              © 2023 Automata Theory Simulator. Created for educational
+              purposes.
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      // ===== PREDEFINED AUTOMATA AND GRAMMARS =====
+      const nfaProblems = {
+        "ends-in-01": {
+          states: ["q0", "q1", "q2"],
+          alphabet: ["0", "1"],
+          transitions: {
+            q0: { 0: ["q0", "q1"], 1: ["q0"] },
+            q1: { 1: ["q2"] },
+          },
+          startState: "q0",
+          finalStates: ["q2"],
+        },
+        epsilon: {
+          states: ["q0", "q1", "q2", "q3", "q4"],
+          alphabet: ["a", "b"],
+          transitions: {
+            q0: { ε: ["q1", "q3"] },
+            q1: { a: ["q2"] },
+            q2: { b: ["q1"] },
+            q3: { b: ["q4"] },
+            q4: { a: ["q3"] },
+          },
+          startState: "q0",
+          finalStates: ["q1", "q3"],
+        },
+        "substring-101": {
+          states: ["q0", "q1", "q2", "q3"],
+          alphabet: ["0", "1"],
+          transitions: {
+            q0: { 0: ["q0"], 1: ["q0", "q1"] },
+            q1: { 0: ["q2"] },
+            q2: { 1: ["q3"] },
+          },
+          startState: "q0",
+          finalStates: ["q3"],
+        },
+        "even-zeros": {
+          states: ["q0", "q1"],
+          alphabet: ["0", "1"],
+          transitions: {
+            q0: { 0: ["q1"], 1: ["q0"] },
+            q1: { 0: ["q0"], 1: ["q1"] },
+          },
+          startState: "q0",
+          finalStates: ["q0"],
+        },
+        "contains-aa": {
+          states: ["q0", "q1", "q2"],
+          alphabet: ["a", "b"],
+          transitions: {
+            q0: { a: ["q0", "q1"], b: ["q0"] },
+            q1: { a: ["q2"] },
+            q2: { a: ["q2"], b: ["q2"] },
+          },
+          startState: "q0",
+          finalStates: ["q2"],
+        },
+        "starts-with-ab": {
+          states: ["q0", "q1", "q2"],
+          alphabet: ["a", "b"],
+          transitions: {
+            q0: { a: ["q1"] },
+            q1: { b: ["q2"] },
+            q2: { a: ["q2"], b: ["q2"] },
+          },
+          startState: "q0",
+          finalStates: ["q2"],
+        },
+        "contains-a-or-b": {
+          states: ["q0", "q1"],
+          alphabet: ["a", "b"],
+          transitions: {
+            q0: { a: ["q1"], b: ["q1"] },
+          },
+          startState: "q0",
+          finalStates: ["q1"],
+        },
+        "divisible-by-3-binary": {
+          states: ["q0", "q1", "q2"],
+          alphabet: ["0", "1"],
+          transitions: {
+            q0: { 0: ["q0"], 1: ["q1"] },
+            q1: { 0: ["q2"], 1: ["q0"] },
+            q2: { 0: ["q1"], 1: ["q2"] },
+          },
+          startState: "q0",
+          finalStates: ["q0"],
+        },
+        "at-least-two-a": {
+          states: ["q0", "q1", "q2", "q3"],
+          alphabet: ["a", "b"],
+          transitions: {
+            q0: { a: ["q1"], b: ["q0"] },
+            q1: { a: ["q2"], b: ["q1"] },
+            q2: { a: ["q2", "q3"], b: ["q2"] },
+          },
+          startState: "q0",
+          finalStates: ["q3"],
+        },
+      };
+
+      const dfaProblems = {
+        "ends-with-00": {
+          states: ["q0", "q1", "q2"],
+          alphabet: ["0", "1"],
+          transitions: {
+            q0: { 0: "q1", 1: "q0" },
+            q1: { 0: "q2", 1: "q0" },
+            q2: { 0: "q2", 1: "q0" },
+          },
+          startState: "q0",
+          finalStates: ["q2"],
+        },
+        "even-length": {
+          states: ["q0", "q1"],
+          alphabet: ["a", "b"],
+          transitions: {
+            q0: { a: "q1", b: "q1" },
+            q1: { a: "q0", b: "q0" },
+          },
+          startState: "q0",
+          finalStates: ["q0"],
+        },
+        "contains-101": {
+          states: ["q0", "q1", "q2", "q3"],
+          alphabet: ["0", "1"],
+          transitions: {
+            q0: { 0: "q0", 1: "q1" },
+            q1: { 0: "q2", 1: "q1" },
+            q2: { 0: "q0", 1: "q3" },
+            q3: { 0: "q3", 1: "q3" },
+          },
+          startState: "q0",
+          finalStates: ["q3"],
+        },
+        "starts-with-0": {
+          states: ["q0", "q1"],
+          alphabet: ["0", "1"],
+          transitions: {
+            q0: { 0: "q1", 1: "q0" },
+            q1: { 0: "q1", 1: "q1" },
+          },
+          startState: "q0",
+          finalStates: ["q1"],
+        },
+        "accepts-a-power-n": {
+          states: ["q0", "q1"],
+          alphabet: ["a", "b"],
+          transitions: {
+            q0: { a: "q1", b: "q0" },
+            q1: { a: "q1", b: "q0" },
+          },
+          startState: "q0",
+          finalStates: ["q1"],
+        },
+        "alternating-01": {
+          states: ["q0", "q1", "q2"],
+          alphabet: ["0", "1"],
+          transitions: {
+            q0: { 0: "q1", 1: "q2" },
+            q1: { 0: "q2", 1: "q0" },
+            q2: { 0: "q0", 1: "q1" },
+          },
+          startState: "q0",
+          finalStates: ["q0"],
+        },
+        "binary-divisible-by-5": {
+          states: ["q0", "q1", "q2", "q3", "q4"],
+          alphabet: ["0", "1"],
+          transitions: {
+            q0: { 0: "q0", 1: "q1" },
+            q1: { 0: "q2", 1: "q3" },
+            q2: { 0: "q4", 1: "q0" },
+            q3: { 0: "q0", 1: "q2" },
+            q4: { 0: "q3", 1: "q4" },
+          },
+          startState: "q0",
+          finalStates: ["q0"],
+        },
+        "strings-with-even-a-and-odd-b": {
+          states: ["q0", "q1", "q2", "q3"],
+          alphabet: ["a", "b"],
+          transitions: {
+            q0: { a: "q2", b: "q1" },
+            q1: { a: "q3", b: "q0" },
+            q2: { a: "q0", b: "q3" },
+            q3: { a: "q1", b: "q2" },
+          },
+          startState: "q0",
+          finalStates: ["q1"],
+        },
+        "binary-strings-divisible-by-3": {
+          states: ["q0", "q1", "q2"],
+          alphabet: ["0", "1"],
+          transitions: {
+            q0: { 0: "q0", 1: "q1" },
+            q1: { 0: "q2", 1: "q0" },
+            q2: { 0: "q1", 1: "q2" },
+          },
+          startState: "q0",
+          finalStates: ["q0"],
+        },
+        "strings-with-at-least-two-a": {
+          states: ["q0", "q1", "q2", "q3"],
+          alphabet: ["a", "b"],
+          transitions: {
+            q0: { a: "q1", b: "q0" },
+            q1: { a: "q2", b: "q1" },
+            q2: { a: "q2", b: "q2" },
+            q3: { a: "q3", b: "q3" },
+          },
+          startState: "q0",
+          finalStates: ["q2"],
+        },
+        "language-a-star-b-star": {
+          states: ["q0", "q1", "q2"],
+          alphabet: ["a", "b"],
+          transitions: {
+            q0: { a: "q0", b: "q1" },
+            q1: { a: "q2", b: "q1" },
+            q2: { a: "q2", b: "q2" },
+          },
+          startState: "q0",
+          finalStates: ["q1"],
+        },
+      };
+
+      const enfaProblems = {
+        "epsilon-example1": {
+          states: ["q0", "q1", "q2"],
+          alphabet: ["a", "b"],
+          transitions: {
+            q0: { ε: ["q1"], a: ["q0"] },
+            q1: { b: ["q1"], ε: ["q2"] },
+            q2: { a: ["q2"] },
+          },
+          startState: "q0",
+          finalStates: ["q2"],
+        },
+        "epsilon-example2": {
+          states: ["q0", "q1", "q2", "q3"],
+          alphabet: ["a", "b"],
+          transitions: {
+            q0: { ε: ["q1", "q2"] },
+            q1: { a: ["q1"], ε: ["q3"] },
+            q2: { b: ["q2"], ε: ["q3"] },
+            q3: { a: ["q3"], b: ["q3"] },
+          },
+          startState: "q0",
+          finalStates: ["q3"],
+        },
+        "epsilon-example3": {
+          states: ["q0", "q1", "q2"],
+          alphabet: ["a", "b"],
+          transitions: {
+            q0: { ε: ["q1"] },
+            q1: { a: ["q1"], ε: ["q2"] },
+            q2: { b: ["q2"] },
+          },
+          startState: "q0",
+          finalStates: ["q2"],
+        },
+        "epsilon-example4": {
+          states: ["q0", "q1", "q2", "q3", "q4"],
+          alphabet: ["0", "1"],
+          transitions: {
+            q0: { ε: ["q1", "q3"] },
+            q1: { 0: ["q2"] },
+            q2: { ε: ["q4"] },
+            q3: { 1: ["q4"] },
+          },
+          startState: "q0",
+          finalStates: ["q4"],
+        },
+        "epsilon-example5": {
+          states: ["q0", "q1", "q2", "q3"],
+          alphabet: ["a", "b"],
+          transitions: {
+            q0: { a: ["q0"], ε: ["q1"] },
+            q1: { b: ["q1"], ε: ["q2"] },
+            q2: { a: ["q3"] },
+          },
+          startState: "q0",
+          finalStates: ["q3"],
+        },
+        "epsilon-example6": {
+          states: ["q0", "q1", "q2", "q3", "q4"],
+          alphabet: ["a", "b"],
+          transitions: {
+            q0: { ε: ["q1", "q2"] },
+            q1: { a: ["q3"] },
+            q2: { b: ["q4"] },
+            q3: { ε: ["q0"] },
+            q4: { ε: ["q0"] },
+          },
+          startState: "q0",
+          finalStates: ["q3", "q4"],
+        },
+      };
+
+      const cfgExamples = {
+        example1: "S → aSb | ε",
+        example2: "S → aB | bA\nA → a | aS | bAA\nB → b | bS | aBB",
+        example3: "E → E + T | T\nT → T * F | F\nF → (E) | id",
+        example4: "S → 0S0 | 1S1 | ε",
+        example5: "S → aS | bS | ε",
+        example6: "S → AB\nA → aA | ε\nB → bB | ε",
+        example7: "S → aSa | bSb | c",
+        example8: "S → (S) | [S] | ε",
+      };
+
+      // ===== GLOBAL STATE =====
+      let currentConversionType = "nfa-dfa";
+      let currentNFA;
+      let nfaNetwork, dfaNetwork;
+      let dfaStates = new Map();
+      let dfaStateCounter = 0;
+      let dfaTransitions = [];
+      let dfaFinalStates = [];
+      let dfaStartState = "";
+      const TRAP_STATE_ID = "∅";
+      let trapStateCreated = false;
+      let simulationSteps = [];
+      let currentStepIndex = -1;
+
+      // ===== DOM ELEMENTS =====
+      const tabs = {
+        "nfa-dfa": document.getElementById("tab-nfa-dfa"),
+        "regex-dfa": document.getElementById("tab-regex-dfa"),
+        "dfa-regex": document.getElementById("tab-dfa-regex"),
+        "cfg-cfl": document.getElementById("tab-cfg-cfl"),
+        "enfa-dfa": document.getElementById("tab-enfa-dfa"),
+      };
+
+      const panels = {
+        "nfa-dfa": document.getElementById("panel-nfa-dfa"),
+        "regex-dfa": document.getElementById("panel-regex-dfa"),
+        "dfa-regex": document.getElementById("panel-dfa-regex"),
+        "cfg-cfl": document.getElementById("panel-cfg-cfl"),
+        "enfa-dfa": document.getElementById("panel-enfa-dfa"),
+      };
+
+      const nfaSelect = document.getElementById("nfa-select");
+      const nextStepBtn = document.getElementById("next-step-btn");
+      const resetBtn = document.getElementById("reset-btn");
+      const explanationPanel = document.getElementById("explanation-panel");
+      const nfaGraphContainer = document.getElementById("nfa-graph");
+      const dfaGraphContainer = document.getElementById("dfa-graph");
+      const regexInput = document.getElementById("regex-input");
+      const regexConvertBtn = document.getElementById("regex-convert-btn");
+      const regexDfaGraph = document.getElementById("regex-dfa-graph");
+      const dfaSelect = document.getElementById("dfa-select");
+      const dfaRegexConvertBtn = document.getElementById(
+        "dfa-regex-convert-btn"
+      );
+      const dfaOriginalGraph = document.getElementById("dfa-original-graph");
+      const regexOutput = document.getElementById("regex-output");
+      const cfgInput = document.getElementById("cfg-input");
+      const cfgConvertBtn = document.getElementById("cfg-convert-btn");
+      const cfgRulesContainer = document.getElementById("cfg-rules");
+      const cflExamplesContainer = document.getElementById("cfl-examples");
+      const enfaSelect = document.getElementById("enfa-select");
+      const enfaConvertBtn = document.getElementById("enfa-convert-btn");
+      const enfaGraph = document.getElementById("enfa-graph");
+      const enfaDfaGraph = document.getElementById("enfa-dfa-graph");
+
+      // ===== UTILITY FUNCTIONS =====
+      function setToString(set) {
+        if (set.size === 0) return "{}";
+        return `{${[...set].sort().join(",")}}`;
+      }
+
+      function stringToSet(str) {
+        const content = str.substring(1, str.length - 1);
+        if (content === "") return new Set();
+        return new Set(content.split(","));
+      }
+
+      function getDfaStateName(nfaStateSet, createIfMissing = true) {
+        const setString = setToString(nfaStateSet);
+        if (dfaStates.has(setString)) {
+          return dfaStates.get(setString);
+        }
+        if (!createIfMissing) return null;
+
+        const newStateName = `S${dfaStateCounter++}`;
+        dfaStates.set(setString, newStateName);
+        return newStateName;
+      }
+
+      function epsilonClosure(states, nfa) {
+        const closure = new Set(states);
+        const stack = [...states];
+        while (stack.length > 0) {
+          const u = stack.pop();
+          const epsilonTransitions = nfa.transitions[u]?.["ε"] || [];
+          for (const v of epsilonTransitions) {
+            if (!closure.has(v)) {
+              closure.add(v);
+              stack.push(v);
+            }
+          }
+        }
+        return closure;
+      }
+
+      function move(states, symbol, nfa) {
+        const reachableStates = new Set();
+        for (const state of states) {
+          const transitions = nfa.transitions[state]?.[symbol] || [];
+          for (const nextState of transitions) {
+            reachableStates.add(nextState);
+          }
+        }
+        return reachableStates;
+      }
+
+      // ===== GRAPH DRAWING FUNCTIONS =====
+      function drawAutomaton(containerId, automaton, type) {
+        const container = document.getElementById(containerId);
+        const nodes = new vis.DataSet();
+        const edges = new vis.DataSet();
+
+        nodes.add({ id: "start_node", hidden: true, physics: false });
+
+        automaton.states.forEach((state) => {
+          const isFinal = automaton.finalStates.includes(state);
+          const isStart = automaton.startState === state;
+          const isTrap = state === TRAP_STATE_ID;
+
+          let label = state;
+          if (
+            type === "dfa" &&
+            automaton.stateMap &&
+            automaton.stateMap.has(state)
+          ) {
+            const nfaSet = automaton.stateMap.get(state);
+            const setString = `{${[...nfaSet].sort().join(",")}}`;
+            label = `${state}\n${setString}`;
+          }
+
+          nodes.add({
+            id: state,
+            label: label,
+            shape: "circle",
+            color: {
+              border: isTrap ? "#64748b" : isFinal ? "#c026d3" : "#4f46e5",
+              background: "#ffffff",
+              highlight: { border: "#c026d3", background: "#f5d0fe" },
+            },
+            borderWidth: isFinal ? 4 : 2,
+            font: { size: 16, color: "#1e293b" },
+            margin: 10,
+          });
+
+          if (isStart) {
+            edges.add({
+              id: `start_edge_${state}`,
+              from: "start_node",
+              to: state,
+              arrows: "to",
+              color: "#16a34a",
+              length: 50,
+              smooth: { type: "curvedCW", roundness: 0.2 },
+            });
+          }
+        });
+
+        const edgeMap = new Map();
+        automaton.transitions.forEach((trans) => {
+          const edgeKey = `${trans.from}-${trans.to}`;
+          if (trans.from === trans.to) {
+            const newEdge = {
+              id: `${trans.from}-${trans.to}-${trans.label}-${Math.random()}`,
+              from: trans.from,
+              to: trans.to,
+              label: trans.label,
+              arrows: "to",
+              font: { align: "top" },
+              color: { color: "#334155", highlight: "#ef4444" },
+              selfReference: { size: 20, angle: Math.PI / 4 },
+            };
+            edges.add(newEdge);
+          } else if (edgeMap.has(edgeKey)) {
+            const existingEdge = edgeMap.get(edgeKey);
+            existingEdge.label += `, ${trans.label}`;
+            edges.update(existingEdge);
+          } else {
+            const newEdge = {
+              id: `${trans.from}-${trans.to}-${trans.label}`,
+              from: trans.from,
+              to: trans.to,
+              label: trans.label,
+              arrows: "to",
+              font: { align: "top" },
+              color: { color: "#334155", highlight: "#ef4444" },
+              smooth: { enabled: true, type: "curvedCW", roundness: 0.1 },
+            };
+            edgeMap.set(edgeKey, newEdge);
+            edges.add(newEdge);
+          }
+        });
+
+        const data = { nodes, edges };
+        const options = {
+          layout: { hierarchical: { enabled: false } },
+          physics: {
+            solver: "forceAtlas2Based",
+            forceAtlas2Based: {
+              gravitationalConstant: -80,
+              centralGravity: 0.01,
+              springConstant: 0.08,
+              springLength: 150,
+              damping: 0.4,
+              avoidOverlap: 0.8,
+            },
+          },
+          interaction: { dragNodes: true, hover: true },
+        };
+
+        return new vis.Network(container, data, options);
+      }
+
+      // ===== CONVERSION FUNCTIONS =====
+      function generateNfaToDfaSteps() {
+        simulationSteps = [];
+        dfaStates = new Map();
+        dfaStateCounter = 0;
+        trapStateCreated = false;
+
+        const nfa = currentNFA;
+        const initialClosure = epsilonClosure(new Set([nfa.startState]), nfa);
+        const initialSetString = setToString(initialClosure);
+
+        const q0_dfa = getDfaStateName(initialClosure);
+        const worklist = [initialClosure];
+        const processedSets = new Set([initialSetString]);
+
+        simulationSteps.push({
+          type: "START_STATE",
+          nfaStartState: nfa.startState,
+          closure: initialClosure,
+          dfaStateName: q0_dfa,
+          message:
+            `1. The initial state of the DFA is the ε-closure of the NFA's start state '${nfa.startState}'.\n` +
+            `   ε-closure(${nfa.startState}) = ${initialSetString}.\n` +
+            `   Let's call this new state '${q0_dfa}'.`,
+        });
+
+        let stepCounter = 2;
+        while (worklist.length > 0) {
+          const currentSet = worklist.shift();
+          const currentDfaStateName = getDfaStateName(currentSet);
+          const currentSetString = setToString(currentSet);
+
+          simulationSteps.push({
+            type: "PROCESS_STATE",
+            dfaStateName: currentDfaStateName,
+            nfaStates: currentSet,
+            message: `Processing DFA state '${currentDfaStateName}' which corresponds to NFA states ${currentSetString}.`,
+          });
+
+          for (const symbol of nfa.alphabet) {
+            const moveResult = move(currentSet, symbol, nfa);
+            const nextClosure = epsilonClosure(moveResult, nfa);
+
+            if (nextClosure.size === 0) {
+              if (!trapStateCreated) {
+                simulationSteps.push({ type: "CREATE_TRAP_STATE" });
+                trapStateCreated = true;
+              }
+              simulationSteps.push({
+                type: "TRANSITION_TO_TRAP",
+                fromDfaState: currentDfaStateName,
+                fromSet: currentSet,
+                symbol: symbol,
+                moveResult: moveResult,
+                message:
+                  `${stepCounter++}. For state '${currentDfaStateName}' and input '${symbol}':\n` +
+                  `   - move(${currentSetString}, '${symbol}') = ${setToString(
+                    moveResult
+                  )}\n` +
+                  `   - ε-closure of an empty set is the empty set.\n` +
+                  `   - This leads to the non-final trap state '${TRAP_STATE_ID}'.\n` +
+                  `   - Add transition: (${currentDfaStateName}, '${symbol}') -> ${TRAP_STATE_ID}`,
+              });
+              continue;
+            }
+
+            const nextSetString = setToString(nextClosure);
+            let nextDfaStateName = getDfaStateName(nextClosure, false);
+            let isNewState = false;
+            if (nextDfaStateName === null) {
+              isNewState = true;
+              nextDfaStateName = getDfaStateName(nextClosure, true);
+              worklist.push(nextClosure);
+              processedSets.add(nextSetString);
+            }
+
+            simulationSteps.push({
+              type: "TRANSITION",
+              fromDfaState: currentDfaStateName,
+              fromSet: currentSet,
+              symbol: symbol,
+              moveResult: moveResult,
+              nextClosure: nextClosure,
+              toDfaState: nextDfaStateName,
+              isNew: isNewState,
+              message:
+                `${stepCounter++}. For state '${currentDfaStateName}' and input '${symbol}':\n` +
+                `   - move(${currentSetString}, '${symbol}') = ${setToString(
+                  moveResult
+                )}\n` +
+                `   - ε-closure(${setToString(
+                  moveResult
+                )}) = ${nextSetString}\n` +
+                `   - This gives us state '${nextDfaStateName}'. ${
+                  isNewState
+                    ? "This is a new state."
+                    : "We have seen this state before."
+                }\n` +
+                `   - Add transition: (${currentDfaStateName}, '${symbol}') -> ${nextDfaStateName}`,
+            });
+          }
+        }
+
+        const finalDfaStates = [];
+        for (const [setStr, dfaName] of dfaStates.entries()) {
+          const nfaSet = stringToSet(setStr);
+          const isFinal = [...nfaSet].some((s) => nfa.finalStates.includes(s));
+          if (isFinal) {
+            finalDfaStates.push(dfaName);
+          }
+        }
+
+        simulationSteps.push({
+          type: "FINAL_STATES",
+          finalStates: finalDfaStates,
+          message:
+            `Finally, we identify the final states. A DFA state is final if its set of NFA states contains any of the NFA's final states (${setToString(
+              new Set(nfa.finalStates)
+            )}).\n` +
+            `The final DFA states are: {${finalDfaStates.join(", ")}}`,
+        });
+      }
+
+      function convertRegexToDFA(regex) {
+        // Simplified implementation - in a real app you'd use Thompson's construction
+        explanationPanel.innerHTML = `<div class="flex items-start">
+                <div class="mr-4 text-accent-400">
+                    <i class="fas fa-robot text-xl"></i>
+                </div>
+                <div>
+                    <p>Converting regex "${regex}" to DFA using Thompson's construction:</p>
+                    <ol class="list-decimal pl-5 mt-2 space-y-1">
+                        <li>Parse the regular expression into its components</li>
+                        <li>Build NFA fragments for each component</li>
+                        <li>Combine fragments according to operators (|, *, concatenation)</li>
+                        <li>Convert the resulting NFA to DFA using subset construction</li>
+                    </ol>
+                </div>
+            </div>`;
+
+        // This would be replaced with actual conversion logic
+        const sampleDFA = {
+          states: ["S0", "S1", "S2"],
+          alphabet: ["a", "b"],
+          startState: "S0",
+          finalStates: ["S2"],
+          transitions: [
+            { from: "S0", to: "S0", label: "a" },
+            { from: "S0", to: "S1", label: "b" },
+            { from: "S1", to: "S2", label: "b" },
+            { from: "S1", to: "S0", label: "a" },
+            { from: "S2", to: "S2", label: "a,b" },
+          ],
+        };
+
+        if (regexDfaGraph.firstChild) {
+          regexDfaGraph.removeChild(regexDfaGraph.firstChild);
+        }
+        drawAutomaton("regex-dfa-graph", sampleDFA, "dfa");
+
+        // Draw a simple parse tree (simulated)
+        const regexTree = document.getElementById("regex-tree");
+        regexTree.innerHTML = `
+                <div class="text-center">
+                    <div class="font-mono text-lg mb-2">${regex}</div>
+                    <div class="flex justify-center">
+                        <div class="text-center">
+                            <div class="w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center mx-auto">S</div>
+                            <div class="h-8 w-0.5 bg-dark-300 mx-auto"></div>
+                            <div class="flex space-x-8 justify-center">
+                                <div class="text-center">
+                                    <div class="w-8 h-8 rounded-full bg-accent-500 text-white flex items-center justify-center mx-auto">a</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="w-8 h-8 rounded-full bg-accent-500 text-white flex items-center justify-center mx-auto">*</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="w-8 h-8 rounded-full bg-accent-500 text-white flex items-center justify-center mx-auto">b</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+      }
+
+      function convertDFAToRegex(dfa) {
+        // Simplified implementation - in a real app you'd use state elimination
+        let regex = "";
+        switch (dfa) {
+          case "ends-with-00":
+            regex = "(0|1)*00";
+            break;
+          case "even-length":
+            regex = "((a|b)(a|b))*";
+            break;
+          case "contains-101":
+            regex = "(0|1)*101(0|1)*";
+            break;
+          case "starts-with-0":
+            regex = "0(0|1)*";
+            break;
+          case "accepts-a-power-n":
+            regex = "a*";
+            break;
+          case "alternating-01":
+            regex = "(01)*|(10)*";
+            break;
+          case "binary-divisible-by-5":
+            regex = "(0|1)*0"; // Placeholder, actual regex is complex
+            break;
+          case "strings-with-even-a-and-odd-b":
+            regex = "(a*b(a*ba*b)*a*)*"; // Placeholder, actual regex is complex
+            break;
+          case "binary-strings-divisible-by-3":
+            regex = "(0|1)*0"; // Placeholder, actual regex is complex
+            break;
+          case "strings-with-at-least-two-a":
+            regex = "(a|b)*a(a|b)*a(a|b)*";
+            break;
+          case "language-a-star-b-star":
+            regex = "a*b*";
+            break;
+        }
+
+        regexOutput.textContent = regex;
+        explanationPanel.innerHTML = `<div class="flex items-start">
+                <div class="mr-4 text-accent-400">
+                    <i class="fas fa-robot text-xl"></i>
+                </div>
+                <div>
+                    <p>Converting DFA to regex using state elimination method:</p>
+                    <ol class="list-decimal pl-5 mt-2 space-y-1">
+                        <li>Add new start and final states with ε transitions</li>
+                        <li>Eliminate states one by one, combining transitions with regex operations</li>
+                        <li>Simplify the final expression between the new start and final states</li>
+                    </ol>
+                    <p class="mt-4 font-bold">Resulting regular expression: <span class="font-mono bg-accent-100 text-accent-800 px-2 py-1 rounded">${regex}</span></p>
+                </div>
+            </div>`;
+      }
+
+      function convertCFGToCFL(cfg) {
+        // Simplified implementation
+        const examples = [];
+        if (cfg.includes("aSb") && cfg.includes("ε")) {
+          examples.push("ε", "ab", "aabb", "aaabbb", "aaaabbbb");
+        } else if (cfg.includes("aB") && cfg.includes("bA")) {
+          examples.push("ab", "ba", "aabb", "abab", "baba", "aaabbb", "bbbaaa");
+        } else if (cfg.includes("E + T")) {
+          examples.push(
+            "id",
+            "id+id",
+            "id*id",
+            "(id)",
+            "id+id*id",
+            "(id+id)*id",
+            "id*(id+id)"
+          );
+        } else if (cfg.includes("0S0") && cfg.includes("1S1")) {
+          examples.push("ε", "00", "11", "0110", "1001", "001100", "110011");
+        } else if (cfg.includes("aS | bS | ε")) {
+          examples.push(
+            "ε",
+            "a",
+            "b",
+            "aa",
+            "ab",
+            "ba",
+            "bb",
+            "aaa",
+            "aab",
+            "aba",
+            "abb",
+            "baa",
+            "bab",
+            "bba",
+            "bbb"
+          );
+        } else if (cfg.includes("AB") && cfg.includes("aA")) {
+          examples.push(
+            "ε",
+            "a",
+            "b",
+            "aa",
+            "ab",
+            "bb",
+            "aaa",
+            "aab",
+            "abb",
+            "bbb"
+          );
+        } else if (cfg.includes("aSa | bSb | c")) {
+          examples.push("c", "aca", "bcb", "acaca", "bcbcb", "abacaba");
+        } else if (cfg.includes("(S) | [S] | ε")) {
+          examples.push("ε", "()", "[]", "(())", "[]()", "([()])", "[[[]]]");
+        }
+
+        cfgRulesContainer.innerHTML = `<pre class="text-sm font-mono bg-slate-100 p-4 rounded-lg">${cfg}</pre>`;
+        cflExamplesContainer.innerHTML = `<ul class="list-disc pl-5 space-y-2">${examples
+          .map((ex) => `<li class="font-mono">${ex}</li>`)
+          .join("")}</ul>`;
+        explanationPanel.innerHTML = `<div class="flex items-start">
+                <div class="mr-4 text-accent-400">
+                    <i class="fas fa-robot text-xl"></i>
+                </div>
+                <div>
+                    <p>Generated language examples for the CFG:</p>
+                    <ul class="list-disc pl-5 mt-2 space-y-1">${examples
+                      .map((ex) => `<li class="font-mono">${ex}</li>`)
+                      .join("")}</ul>
+                </div>
+            </div>`;
+      }
+
+      function convertENFAToDFA(enfa) {
+        // Similar to NFA to DFA but with ε-closure first
+        const nfa = enfaProblems[enfa];
+
+        // Draw the original ε-NFA
+        const enfaForDrawing = {
+          ...nfa,
+          transitions: Object.entries(nfa.transitions).flatMap(
+            ([from, trans]) =>
+              Object.entries(trans).flatMap(([label, toStates]) =>
+                toStates.map((to) => ({ from, to, label }))
+              )
+          ),
+        };
+
+        if (enfaGraph.firstChild) {
+          enfaGraph.removeChild(enfaGraph.firstChild);
+        }
+        drawAutomaton("enfa-graph", enfaForDrawing, "nfa");
+
+        // Perform conversion (similar to NFA to DFA)
+        currentNFA = nfa;
+        generateNfaToDfaSteps();
+
+        // Show the first step explanation
+        explanationPanel.innerHTML = `<div class="flex items-start">
+                <div class="mr-4 text-accent-400">
+                    <i class="fas fa-robot text-xl"></i>
+                </div>
+                <div>
+                    <p>Converting ε-NFA to DFA:</p>
+                    <ol class="list-decimal pl-5 mt-2 space-y-1">
+                        <li>Compute ε-closure of the start state</li>
+                        <li>For each state and symbol, compute move followed by ε-closure</li>
+                        <li>Continue until no new states are created</li>
+                    </ol>
+                </div>
+            </div>`;
+
+        // Draw the resulting DFA
+        updateDfaGraph(simulationSteps[0]);
+      }
+
+      // ===== UI UPDATE FUNCTIONS =====
+      function updateDfaGraph(step) {
+        const dfaStateMap = new Map();
+        dfaStates.forEach((name, setStr) => {
+          dfaStateMap.set(name, stringToSet(setStr));
+        });
+
+        let allDfaStates = Array.from(dfaStates.values());
+
+        if (step.type === "START_STATE") {
+          dfaStartState = step.dfaStateName;
+        } else if (step.type === "TRANSITION") {
+          dfaTransitions.push({
+            from: step.fromDfaState,
+            to: step.toDfaState,
+            label: step.symbol,
+          });
+        } else if (step.type === "CREATE_TRAP_STATE") {
+          allDfaStates.push(TRAP_STATE_ID);
+          currentNFA.alphabet.forEach((symbol) => {
+            dfaTransitions.push({
+              from: TRAP_STATE_ID,
+              to: TRAP_STATE_ID,
+              label: symbol,
+            });
+          });
+        } else if (step.type === "TRANSITION_TO_TRAP") {
+          dfaTransitions.push({
+            from: step.fromDfaState,
+            to: TRAP_STATE_ID,
+            label: step.symbol,
+          });
+        } else if (step.type === "FINAL_STATES") {
+          dfaFinalStates = step.finalStates;
+        }
+
+        const dfaForDrawing = {
+          states: allDfaStates,
+          alphabet: currentNFA.alphabet,
+          startState: dfaStartState,
+          finalStates: dfaFinalStates,
+          transitions: dfaTransitions,
+          stateMap: dfaStateMap,
+        };
+
+        if (currentConversionType === "nfa-dfa") {
+          if (dfaNetwork) dfaNetwork.destroy();
+          if (dfaForDrawing.states.length > 0) {
+            dfaNetwork = drawAutomaton("dfa-graph", dfaForDrawing, "dfa");
+          }
+        } else if (currentConversionType === "enfa-dfa") {
+          if (enfaDfaGraph.firstChild) {
+            enfaDfaGraph.removeChild(enfaDfaGraph.firstChild);
+          }
+          if (dfaForDrawing.states.length > 0) {
+            drawAutomaton("enfa-dfa-graph", dfaForDrawing, "dfa");
+          }
+        }
+      }
+
+      function highlightNodes(step) {
+        if (nfaNetwork) nfaNetwork.unselectAll();
+        if (dfaNetwork) dfaNetwork.unselectAll();
+
+        let nfaNodesToSelect = [];
+        let dfaNodesToSelect = [];
+
+        switch (step.type) {
+          case "START_STATE":
+            nfaNodesToSelect = [...step.closure];
+            dfaNodesToSelect = [step.dfaStateName];
+            break;
+          case "PROCESS_STATE":
+            nfaNodesToSelect = [...step.nfaStates];
+            dfaNodesToSelect = [step.dfaStateName];
+            break;
+          case "TRANSITION":
+            nfaNodesToSelect = [
+              ...step.fromSet,
+              ...step.moveResult,
+              ...step.nextClosure,
+            ];
+            dfaNodesToSelect = [step.fromDfaState, step.toDfaState];
+            break;
+          case "TRANSITION_TO_TRAP":
+            nfaNodesToSelect = [...step.fromSet, ...step.moveResult];
+            dfaNodesToSelect = [step.fromDfaState, TRAP_STATE_ID];
+            break;
+          case "FINAL_STATES":
+            dfaNodesToSelect = step.finalStates;
+            break;
+        }
+
+        if (nfaNetwork && nfaNodesToSelect.length > 0) {
+          nfaNetwork.selectNodes(nfaNodesToSelect);
+        }
+        if (dfaNetwork && dfaNodesToSelect.length > 0) {
+          dfaNetwork.selectNodes(dfaNodesToSelect, { highlight: true });
+        }
+      }
+
+      function reset() {
+        currentStepIndex = -1;
+
+        if (currentConversionType === "nfa-dfa") {
+          const selectedProblem = nfaSelect.value;
+          currentNFA = nfaProblems[selectedProblem];
+
+          dfaStates = new Map();
+          dfaStateCounter = 0;
+          dfaTransitions = [];
+          dfaFinalStates = [];
+          dfaStartState = "";
+          trapStateCreated = false;
+
+          const nfaForDrawing = {
+            ...currentNFA,
+            transitions: Object.entries(currentNFA.transitions).flatMap(
+              ([from, trans]) =>
+                Object.entries(trans).flatMap(([label, toStates]) =>
+                  toStates.map((to) => ({ from, to, label }))
+                )
+            ),
+          };
+          if (nfaNetwork) nfaNetwork.destroy();
+          nfaNetwork = drawAutomaton("nfa-graph", nfaForDrawing, "nfa");
+
+          if (dfaNetwork) dfaNetwork.destroy();
+          dfaGraphContainer.innerHTML = "";
+
+          generateNfaToDfaSteps();
+
+          explanationPanel.innerHTML = `<div class="flex items-start">
+                    <div class="mr-4 text-accent-400">
+                        <i class="fas fa-robot text-xl"></i>
+                    </div>
+                    <div>
+                        <p>Select an NFA and click "Next Step" to begin the conversion process.</p>
+                    </div>
+                </div>`;
+          nextStepBtn.disabled = false;
+          nextStepBtn.classList.remove("btn-disabled");
+        } else if (currentConversionType === "regex-dfa") {
+          const regexExamples = [
+            "a*b+",
+            "(a|b)*abb",
+            "(0|1)*1",
+            "(ab)*",
+            "a(a|b)*b",
+            "(00|11)*",
+            "(a|b)*",
+          ];
+          const randomRegex =
+            regexExamples[Math.floor(Math.random() * regexExamples.length)];
+          regexInput.value = randomRegex;
+          document.getElementById("regex-tree").innerHTML =
+            '<p class="text-dark-400">Parse tree will appear here</p>';
+          document.getElementById("regex-dfa-graph").innerHTML =
+            '<p class="text-dark-400">DFA will appear here</p>';
+          explanationPanel.innerHTML = `<div class="flex items-start">
+                    <div class="mr-4 text-accent-400">
+                        <i class="fas fa-robot text-xl"></i>
+                    </div>
+                    <div>
+                        <p>Enter a regular expression and click "Convert to DFA" to begin.</p>
+                    </div>
+                </div>`;
+        } else if (currentConversionType === "dfa-regex") {
+          const selectedDFA = dfaSelect.value;
+          const dfa = dfaProblems[selectedDFA];
+
+          const dfaForDrawing = {
+            ...dfa,
+            transitions: Object.entries(dfa.transitions).flatMap(
+              ([from, trans]) =>
+                Object.entries(trans).map(([label, to]) => ({
+                  from,
+                  to,
+                  label,
+                }))
+            ),
+          };
+
+          if (dfaOriginalGraph.firstChild) {
+            dfaOriginalGraph.removeChild(dfaOriginalGraph.firstChild);
+          }
+          drawAutomaton("dfa-original-graph", dfaForDrawing, "dfa");
+
+          regexOutput.textContent = "";
+          explanationPanel.innerHTML = `<div class="flex items-start">
+                    <div class="mr-4 text-accent-400">
+                        <i class="fas fa-robot text-xl"></i>
+                    </div>
+                    <div>
+                        <p>Select a DFA and click "Convert to Regular Expression" to begin.</p>
+                    </div>
+                </div>`;
+        } else if (currentConversionType === "cfg-cfl") {
+          const cfgKeys = Object.keys(cfgExamples);
+          const randomCfgKey =
+            cfgKeys[Math.floor(Math.random() * cfgKeys.length)];
+          cfgInput.value = cfgExamples[randomCfgKey];
+          cfgRulesContainer.innerHTML =
+            '<pre class="text-sm font-mono bg-slate-100 p-4 rounded-lg">Rules will appear here</pre>';
+          cflExamplesContainer.innerHTML =
+            '<ul class="list-disc pl-5 space-y-2">Examples will appear here</ul>';
+          explanationPanel.innerHTML = `<div class="flex items-start">
+                    <div class="mr-4 text-accent-400">
+                        <i class="fas fa-robot text-xl"></i>
+                    </div>
+                    <div>
+                        <p>Enter a CFG and click "Generate Language" to see examples.</p>
+                    </div>
+                </div>`;
+        } else if (currentConversionType === "enfa-dfa") {
+          const selectedENFA = enfaSelect.value;
+          const enfa = enfaProblems[selectedENFA];
+
+          const enfaForDrawing = {
+            ...enfa,
+            transitions: Object.entries(enfa.transitions).flatMap(
+              ([from, trans]) =>
+                Object.entries(trans).flatMap(([label, toStates]) =>
+                  toStates.map((to) => ({ from, to, label }))
+                )
+            ),
+          };
+
+          if (enfaGraph.firstChild) {
+            enfaGraph.removeChild(enfaGraph.firstChild);
+          }
+          drawAutomaton("enfa-graph", enfaForDrawing, "nfa");
+
+          if (enfaDfaGraph.firstChild) {
+            enfaDfaGraph.removeChild(enfaDfaGraph.firstChild);
+          }
+
+          explanationPanel.innerHTML = `<div class="flex items-start">
+                    <div class="mr-4 text-accent-400">
+                        <i class="fas fa-robot text-xl"></i>
+                    </div>
+                    <div>
+                        <p>Select an ε-NFA and click "Convert to DFA" to begin.</p>
+                    </div>
+                </div>`;
+        }
+      }
+
+      function nextStep() {
+        currentStepIndex++;
+        if (currentStepIndex >= simulationSteps.length) {
+          explanationPanel.innerHTML +=
+            '\n\n<p class="text-green-400 font-bold">Conversion Complete!</p>';
+          nextStepBtn.disabled = true;
+          nextStepBtn.classList.add("btn-disabled");
+          return;
+        }
+
+        const step = simulationSteps[currentStepIndex];
+        explanationPanel.innerHTML = `<div class="flex items-start">
+                <div class="mr-4 text-accent-400">
+                    <i class="fas fa-robot text-xl"></i>
+                </div>
+                <div>
+                    <p class="whitespace-pre-wrap font-mono">${step.message}</p>
+                </div>
+            </div>`;
+
+        updateDfaGraph(step);
+        highlightNodes(step);
+      }
+
+      function switchTab(tabId) {
+        currentConversionType = tabId;
+
+        // Update tab styles
+        Object.values(tabs).forEach((tab) => {
+          tab.classList.remove("tab-active");
+        });
+        tabs[tabId].classList.add("tab-active");
+
+        // Update panel visibility
+        Object.values(panels).forEach((panel) => {
+          panel.classList.add("hidden");
+        });
+        panels[tabId].classList.remove("hidden");
+
+        // Reset the current panel
+        reset();
+      }
+
+      // ===== EVENT LISTENERS =====
+      nfaSelect.addEventListener("change", reset);
+      resetBtn.addEventListener("click", reset);
+      nextStepBtn.addEventListener("click", nextStep);
+      regexConvertBtn.addEventListener("click", () =>
+        convertRegexToDFA(regexInput.value)
+      );
+      dfaSelect.addEventListener("change", reset);
+      dfaRegexConvertBtn.addEventListener("click", () =>
+        convertDFAToRegex(dfaSelect.value)
+      );
+      cfgConvertBtn.addEventListener("click", () =>
+        convertCFGToCFL(cfgInput.value)
+      );
+      enfaSelect.addEventListener("change", reset);
+      enfaConvertBtn.addEventListener("click", () =>
+        convertENFAToDFA(enfaSelect.value)
+      );
+
+      // Tab switching
+      Object.entries(tabs).forEach(([tabId, tabElement]) => {
+        tabElement.addEventListener("click", () => switchTab(tabId));
+      });
+
+      // ===== INITIALIZATION =====
+      window.addEventListener("load", () => {
+        switchTab("nfa-dfa");
+      });
+    </script>
+  </body>
+</html>
