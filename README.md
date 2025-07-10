@@ -16,12 +16,6 @@ An interactive, visually stunning web app for learning and exploring automata th
 
 ---
 
-## 🖼️ Demo
-
-![Demo Screenshot](demo-screenshot.png)
-
----
-
 ## 🛠️ How to Run
 
 1. **Clone or Download** this repository.
@@ -41,7 +35,7 @@ An interactive, visually stunning web app for learning and exploring automata th
 
 ## 🙌 Credits & Social
 
-Created by [@mistermunib](https://github.com/mistermunib)
+Created by [@Abrash-Official](https://github.com/Abrash-Official) for [@mistermunib](https://github.com/mistermunib)
 
 - Twitter: [@mistermunib](https://twitter.com/mistermunib)
 - Email: [proficientremote@gmail.com](mailto:proficientremote@gmail.com)
